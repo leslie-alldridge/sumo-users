@@ -1,30 +1,34 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
 func main() {
 	fmt.Println("Starting the application...")
-	response, err := http.Get("https://httpbin.org/ip")
+	// api request to sumo
+	//client := &http.Client{}
+	req, err := http.NewRequest("GET", "https://api.us2.sumologic.com/api/v1/users", nil)
+	req.Header.Add("Authorization", "Basic "+basicAuth("", ""))
 	if err != nil {
-		fmt.Printf("The HTTP request failed with error %s\n", err)
+		log.Fatal(err)
 	} else {
-		data, _ := ioutil.ReadAll(response.Body)
-		fmt.Println(string(data))
+		body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			log.Fatalln("error")
+		} else {
+			fmt.Println(string(body))
+		}
 	}
-	jsonData := map[string]string{"firstname": "Nic", "lastname": "Raboy"}
-	jsonValue, _ := json.Marshal(jsonData)
-	response, err = http.Post("https://httpbin.org/post", "application/json", bytes.NewBuffer(jsonValue))
-	if err != nil {
-		fmt.Printf("The HTTP request failed with error %s\n", err)
-	} else {
-		data, _ := ioutil.ReadAll(response.Body)
-		fmt.Println(string(data))
-	}
+
 	fmt.Println("Terminating the application...")
 }
